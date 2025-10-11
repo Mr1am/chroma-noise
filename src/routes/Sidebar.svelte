@@ -195,6 +195,7 @@
 		align-items: center;
 		justify-content: center;
 	}
+
 	.sidebar {
 		width: 320px;
 		padding: 18px;
@@ -205,6 +206,11 @@
 		gap: var(--s);
 		display: flex;
 		flex-direction: column;
+		touch-action: auto;
+	}
+
+	.sidebar * {
+		touch-action: auto;
 	}
 	.point-row {
 		display: flex;
