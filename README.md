@@ -2,11 +2,15 @@
 
 Gradient noise for Svelte 5.
 
-At an early stage of development.
+### New in 0.0.2
+- types
+- new modes: swirl and radial waves
+- removed unused dependencies
 
-### Roadmap
-- [] docs
-- [] optimization
 
 ### Site & playground
 https://chromanoise.netlify.app
+
+### Roadmap
+- [] docs
+- [] fix grain size option

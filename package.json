@@ -1,6 +1,6 @@
 {
 	"name": "chroma-noise",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run prepack",
@@ -31,8 +31,7 @@
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0",
-		"ventoui-utils": "^0.0.2",
-		"@sveltejs/kit": "^2.0.0"
+		"ventoui-utils": "^0.0.2"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^6.1.0",
@@ -45,22 +44,25 @@
 		"publint": "^0.3.13",
 		"svelte": "^5.39.5",
 		"svelte-check": "^4.3.2",
+		"svelte-fancy-transitions": "^0.0.7",
 		"typescript": "^5.9.2",
+		"ventoui-button": "^0.0.2",
+		"ventoui-slider": "^0.0.1",
+		"ventoui-styles": "^0.0.2",
 		"vite": "^7.1.7"
 	},
 	"keywords": [
-		"svelte", "simplex", "noise", "gradient", "chroma"
+		"svelte",
+		"simplex",
+		"noise",
+		"gradient",
+		"chroma",
+		"chroma-noise"
 	],
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
 	},
-	"packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac",
-	"dependencies": {
-		"ventoui-button": "^0.0.2",
-		"ventoui-slider": "^0.0.1",
-		"ventoui-styles": "^0.0.2",
-		"ventoui-utils": "^0.0.2"
-	}
+	"packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac"
 }

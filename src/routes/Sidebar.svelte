@@ -17,6 +17,7 @@
 		handlers?: boolean;
 		options?: (option: any) => void;
 		change?: (option: any) => void;
+		children?: import('svelte').Snippet;
 	}
 
 	let {
@@ -32,21 +33,9 @@
 		handlers = $bindable(true),
 		options = ({}) => {},
 		change = ({}) => {},
-		seed = Math.random()
+		seed = Math.random(),
+		children
 	}: Props = $props();
-
-	function onGrainAmountChange(e: Event) {
-		const v = parseFloat((e.target as HTMLInputElement).value);
-		options({ grainAmount: v });
-	}
-	function onGrainSizeChange(e: Event) {
-		const v = parseFloat((e.target as HTMLInputElement).value);
-		options({ grainSize: v });
-	}
-	function onWarpModeChange(e: Event) {
-		const v = parseInt((e.target as HTMLInputElement).value, 10);
-		options({ warpMode: v });
-	}
 
 	function addPoint() {
 		if (points.length >= 12) return;
@@ -80,13 +69,13 @@
 <aside class="sidebar">
 	<h1>Colors</h1>
 	<div class="colors">
-		{#each points as p, i}
+		{#each points as point, i}
 			<div class="point-row">
 				<input
 					class="color-input"
 					type="color"
-					bind:value={p.color}
-					oninput={(e) => updatePoint(i, { color: (e.target as HTMLInputElement).value })}
+					bind:value={point.color}
+					oninput={(e) => updatePoint(i, { color: e.target.value })}
 				/>
 				<button class="remove-btn centered" onclick={() => removePoint(i)}>✕</button>
 			</div>
@@ -106,12 +95,14 @@
 	<h1>Warp</h1>
 	<div class="horizontal gap-xs">
 		<p>Mode</p>
-		<select class="plain width-fill radius-large" bind:value={warpMode} onchange={onWarpModeChange}>
+		<select class="plain width-fill radius-large" bind:value={warpMode}>
 			<option value="0">None</option>
 			<option value="1">Waves</option>
 			<option value="2">Simplex Noise</option>
 			<option value="3">FBM (fractal)</option>
 			<option value="4">Ridged</option>
+			<option value="5">Swirl</option>
+			<option value="6">Radial waves</option>
 		</select>
 	</div>
 
@@ -142,10 +133,8 @@
 		/>
 		<Button
 			glare
-			class="add-btn centered radius-large s width-fit"
-			onclick={randomizeSeed}
-			title="Randomize seed">Randomize</Button
-		>
+			class="centered radius-large s width-fit"
+			onclick={randomizeSeed}>Random</Button>
 	</div>
 
 	<h1>Animation</h1>
@@ -173,6 +162,7 @@
 		<p>Show</p>
 		<input type="checkbox" class="height-fill" bind:checked={handlers} />
 	</div>
+	{@render children?.()}
 </aside>
 
 <style>
@@ -241,24 +231,17 @@
 		width: 1.2rem;
 		height: 1.2rem;
 	}
-	.add-btn {
-		width: 2.25rem;
-		height: 2.25rem;
-		border-radius: 1.5rem;
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		background: rgba(255, 255, 255, 0.1);
-		color: #012;
-		cursor: pointer;
-		font-weight: 700;
-	}
+
 	input[type='color']::-webkit-color-swatch {
 		border: none;
 		padding: 0;
 		margin: -0.5rem;
 	}
+
 	p {
 		padding-block: 0.5rem;
 	}
+
 	select {
 		background: var(--bg);
 	}
