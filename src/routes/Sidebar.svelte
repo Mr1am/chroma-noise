@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from 'ventoui-button';
 	import { Slider } from 'ventoui-slider';
+	import { slide } from 'svelte/transition';
 
 	interface Props {
 		points?: { color: string; x: number; y: number }[];
@@ -16,12 +17,11 @@
 		seed?: number;
 		handlers?: boolean;
 		options?: (option: any) => void;
-		change?: (option: any) => void;
 		children?: import('svelte').Snippet;
 	}
 
 	let {
-		points = [],
+		points = $bindable([]),
 		radius = 0.6,
 		intensity = 1.0,
 		timeAmount = 1.0,
@@ -32,23 +32,19 @@
 		grainSize = 1.0,
 		handlers = $bindable(true),
 		options = ({}) => {},
-		change = ({}) => {},
 		seed = Math.random(),
 		children
 	}: Props = $props();
 
 	function addPoint() {
 		if (points.length >= 12) return;
-		const next = [...points, { color: '#ffffff', x: 0.5, y: 0.5 }];
-		change({ points: next });
+		points = [...points, { color: '#ffffff', x: 0.5, y: 0.5 }];
 	}
 	function removePoint(i: number) {
-		const next = points.filter((_, idx) => idx !== i);
-		change({ points: next });
+		points = points.filter((_, idx) => idx !== i);
 	}
 	function updatePoint(i: number, partial: Partial<(typeof points)[0]>) {
-		const next = points.map((p, idx) => (idx === i ? { ...p, ...partial } : p));
-		change({ points: next });
+		points = points.map((p, idx) => (idx === i ? { ...p, ...partial } : p));
 	}
 
 	$effect(() => options({ radius }));
@@ -70,7 +66,7 @@
 	<h1>Colors</h1>
 	<div class="colors">
 		{#each points as point, i}
-			<div class="point-row">
+			<div class="point-row" transition:slide|global={{ axis: 'x' }}>
 				<input
 					class="color-input"
 					type="color"

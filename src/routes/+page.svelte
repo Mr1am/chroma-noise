@@ -28,13 +28,13 @@
 	const DEFAULT_WARP_AMOUNT = 0.0;
 	const DEFAULT_GRAIN_AMOUNT = 0.0;
 	const DEFAULT_GRAIN_SIZE = 1.0;
-	const DEFAULT_GRAIN_ANIMATE = false;
 	const DEFAULT_SEED = Math.random();
 
 	const toastParams: FlyParams = { reverse: true }
 
-	let { points = $bindable(DEFAULT_POINTS.map(p => ({ ...p }))), radius = $bindable(DEFAULT_RADIUS), intensity = $bindable(DEFAULT_INTENSITY) }: Props = $props();
+	let { radius = $bindable(DEFAULT_RADIUS), intensity = $bindable(DEFAULT_INTENSITY) }: Props = $props();
 
+	let points = $state(DEFAULT_POINTS.map(p => ({ ...p })));
 	let stageEl: HTMLElement | null = $state(null);
 	let draggingIndex: number | null = null;
 	let rectCache: DOMRect | null = null;
@@ -44,7 +44,6 @@
 	let warpAmount = $state(DEFAULT_WARP_AMOUNT);
 	let grainAmount = $state(DEFAULT_GRAIN_AMOUNT);
 	let grainSize = $state(DEFAULT_GRAIN_SIZE);
-	let grainAnimate = $state(DEFAULT_GRAIN_ANIMATE);
 	let seed = $state(DEFAULT_SEED);
 	let handlersVisible = $state(true);
 
@@ -96,12 +95,6 @@
 		rectCache = null;
 	}
 
-	function handleUIChange(e: CustomEvent) {
-		if ((e as any).detail?.points) {
-			points = (e as any).detail.points;
-		}
-	}
-
 	function handleOptions(e: CustomEvent) {
 		const d = (e as any).detail ?? e;
 		if (typeof d.radius === 'number') radius = d.radius;
@@ -109,12 +102,9 @@
 		if (typeof d.warpMode === 'number') warpMode = d.warpMode;
 		if (typeof d.warpSize === 'number') warpSize = d.warpSize;
 		if (typeof d.warpAmount === 'number') warpAmount = d.warpAmount;
-		if (typeof d.timeAmount === 'number') {
-			timeAmount = d.timeAmount;
-		}
+		if (typeof d.timeAmount === 'number') timeAmount = d.timeAmount;
 		if (typeof d.grainAmount === 'number') grainAmount = d.grainAmount;
 		if (typeof d.grainSize === 'number') grainSize = d.grainSize;
-		if (typeof d.grainAnimate === 'boolean') grainAnimate = d.grainAnimate;
 		if (typeof d.seed === 'number') seed = d.seed;
 	}
 
@@ -141,7 +131,6 @@
 		warpAmount = DEFAULT_WARP_AMOUNT;
 		grainAmount = DEFAULT_GRAIN_AMOUNT;
 		grainSize = DEFAULT_GRAIN_SIZE;
-		grainAnimate = DEFAULT_GRAIN_ANIMATE;
 		seed = DEFAULT_SEED;
 		showToast('Reset to defaults');
 	}
@@ -241,7 +230,7 @@
 	</div>
 
 	<Sidebar
-		{points}
+		bind:points={points}
 		{radius}
 		{intensity}
 		{grainAmount}
@@ -251,7 +240,6 @@
 		{warpAmount}
 		{timeAmount}
 		{seed}
-		change={(e) => handleUIChange(e)}
 		options={(e) => handleOptions(e)}
 		bind:handlers={handlersVisible}>
 		<Button glare class="s radius-large" onclick={exportToClipboard} aria-label="export-config">Copy setup</Button>
