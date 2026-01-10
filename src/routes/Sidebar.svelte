@@ -55,7 +55,6 @@
 	$effect(() => options({ timeAmount }));
 	$effect(() => options({ grainAmount }));
 	$effect(() => options({ grainSize }));
-
 	function randomizeSeed() {
 		const s = Math.random();
 		options({ seed: s });

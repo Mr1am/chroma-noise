@@ -52,4 +52,8 @@ export interface GradientOptions {
 	seed?: number;
 	/** Grain effect configuration */
 	grain?: Grain;
+	/** Player state: 'loading', 'playing', or 'paused' */
+	playerState?: 'loading' | 'playing' | 'paused';
+	/** Use web worker for rendering, default: false */
+	useWorker?: boolean;
 }

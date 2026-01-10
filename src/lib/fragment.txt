@@ -89,6 +89,7 @@ vec2 warpRidged(vec2 uv, float t, float seed) {
 }
 
 vec2 warpSwirl(vec2 uv, float t) {
+    if (u_warpAmount == 0.0) return uv;
     vec2 centered = uv - 0.5;
     float radius = length(centered);
     float angle = radius * u_warpSize * 5.0 - t * 0.5;
@@ -100,6 +101,7 @@ vec2 warpSwirl(vec2 uv, float t) {
 }
 
 vec2 warpRadial(vec2 uv, float t) {
+    if (u_warpAmount == 0.0) return uv;
     vec2 centered = uv - 0.5;
     float r = length(centered);
     float theta = atan(centered.y, centered.x);
