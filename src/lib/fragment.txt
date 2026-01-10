@@ -89,29 +89,29 @@ vec2 warpRidged(vec2 uv, float t, float seed) {
 }
 
 vec2 warpSwirl(vec2 uv, float t) {
-    if (u_warpAmount == 0.0) return uv;
     vec2 centered = uv - 0.5;
     float radius = length(centered);
     float angle = radius * u_warpSize * 5.0 - t * 0.5;
-    float s = sin(angle) * u_warpAmount;
-    float c = cos(angle) * u_warpAmount;
-    centered = vec2(c * centered.x - s * centered.y, s * centered.x + c * centered.y);
-    centered.x *= u_resolution.x / u_resolution.y;
-    return centered + 0.5;
+    float s = sin(angle);
+    float c = cos(angle);
+    vec2 warped = vec2(c * centered.x - s * centered.y, s * centered.x + c * centered.y);
+    warped.x *= u_resolution.x / u_resolution.y;
+    warped = warped + 0.5;
+    return mix(uv, warped, u_warpAmount);
 }
 
 vec2 warpRadial(vec2 uv, float t) {
-    if (u_warpAmount == 0.0) return uv;
     vec2 centered = uv - 0.5;
     float r = length(centered);
     float theta = atan(centered.y, centered.x);
-    float wave = sin(r * u_warpSize * 20.0 - t * 2.0) * u_warpAmount;
-    r += wave;
+    float wave = sin(r * u_warpSize * 20.0 - t * 2.0);
+    float r_warped = r + wave;
     vec2 p;
-    p.x = r * cos(theta);
-    p.y = r * sin(theta);
+    p.x = r_warped * cos(theta);
+    p.y = r_warped * sin(theta);
     p.x *= u_resolution.x / u_resolution.y;
-    return p + 0.5;
+    p = p + 0.5;
+    return mix(uv, p, u_warpAmount);
 }
 
 vec2 applyWarp(vec2 uv) {
