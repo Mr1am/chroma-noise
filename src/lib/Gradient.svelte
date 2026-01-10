@@ -158,13 +158,11 @@ gl_Position = vec4(a_pos, 0.0, 1.0);
 
 	function render(time: number) {
 		if (useWorker && worker) {
-			// Main thread animation loop tells worker to render
 			if (lastTime === 0) lastTime = time;
 			const dt = (time - lastTime) * 0.001;
 			lastTime = time;
 			animTime += dt * speed;
 
-			// Don't resize after transferControlToOffscreen - handle in resize observer instead
 			worker.postMessage({
 				type: 'render',
 				time: animTime
