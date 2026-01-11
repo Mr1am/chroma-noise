@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      ventoui-utils:
-        specifier: ^0.0.2
-        version: 0.0.2
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: ^6.1.0
@@ -53,7 +49,7 @@ importers:
         version: 0.0.2(svelte@5.39.11)(ventoui-styles@0.0.2)
       ventoui-slider:
         specifier: ^0.0.1
-        version: 0.0.1(svelte-fancy-transitions@0.0.7)(svelte@5.39.11)(ventoui-styles@0.0.2)(ventoui-utils@0.0.2)
+        version: 0.0.1(svelte-fancy-transitions@0.0.7)(svelte@5.39.11)(ventoui-styles@0.0.2)(ventoui-utils@0.0.3)
       ventoui-styles:
         specifier: ^0.0.2
         version: 0.0.2
@@ -625,8 +621,8 @@ packages:
   ventoui-styles@0.0.2:
     resolution: {integrity: sha512-W4OZkmqMM9HqYqATs/VziX7P4eaR9fIMHZM3rQgNBgqU3NMwEKhLp6ZkcRIWBEaYydP1ooz1rHLGBB+P6TOLMw==}
 
-  ventoui-utils@0.0.2:
-    resolution: {integrity: sha512-+vRfaGEezK9Cym/xuq63+FyLP/R6JPnPiJy7VmeMJd06GfGSYCvJ8onl1wsKiOMDIoW7a14Wx6O1zPtQPJoeVQ==}
+  ventoui-utils@0.0.3:
+    resolution: {integrity: sha512-fsiKpaT0fIKAOkKBNROc4QHayqPGKg3Gs96J8d4THksb8M2OqbD1d6VkoJvb51lSKUkpL+gzidWpkVqe0sLtgw==}
 
   vite@7.1.9:
     resolution: {integrity: sha512-4nVGliEpxmhCL8DslSAUdxlB6+SMrhB0a1v5ijlh1xB1nEPuy1mxaHxysVucLHuWryAxLWg6a5ei+U4TLn/rFg==}
@@ -1134,16 +1130,16 @@ snapshots:
       svelte: 5.39.11
       ventoui-styles: 0.0.2
 
-  ventoui-slider@0.0.1(svelte-fancy-transitions@0.0.7)(svelte@5.39.11)(ventoui-styles@0.0.2)(ventoui-utils@0.0.2):
+  ventoui-slider@0.0.1(svelte-fancy-transitions@0.0.7)(svelte@5.39.11)(ventoui-styles@0.0.2)(ventoui-utils@0.0.3):
     dependencies:
       svelte: 5.39.11
       svelte-fancy-transitions: 0.0.7
       ventoui-styles: 0.0.2
-      ventoui-utils: 0.0.2
+      ventoui-utils: 0.0.3
 
   ventoui-styles@0.0.2: {}
 
-  ventoui-utils@0.0.2: {}
+  ventoui-utils@0.0.3: {}
 
   vite@7.1.9:
     dependencies:

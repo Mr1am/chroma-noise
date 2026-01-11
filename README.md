@@ -1,12 +1,6 @@
 # chroma-noise
 
-Gradient noise for Svelte 5.
-
-### New in 0.0.2
-- types
-- new modes: swirl and radial waves
-- removed unused dependencies
-
+Gradient noise for Svelte. With warp and grain.
 
 ### Site & playground
 https://chromanoise.netlify.app

@@ -32,6 +32,8 @@ export interface Grain {
 	size?: number;
 }
 
+export type shaderState = 'loading' | 'playing' | 'paused';
+
 /**
  * Configuration for the gradient.
  */
@@ -52,8 +54,20 @@ export interface GradientOptions {
 	seed?: number;
 	/** Grain effect configuration */
 	grain?: Grain;
-	/** Player state: 'loading', 'playing', or 'paused' */
-	playerState?: 'loading' | 'playing' | 'paused';
-	/** Use web worker for rendering, default: false */
-	useWorker?: boolean;
+	/** Current state: 'loading', 'playing', or 'paused' */
+	currentState?: shaderState;
+	/** Class applied to the canvas element **/
+	class?: string;
+}
+
+export interface RenderMessage {
+	type: 'init' | 'render' | 'resize' | 'updateUniforms' | 'destroy';
+	offscreenCanvas?: OffscreenCanvas;
+	fragShader?: string;
+	width?: number;
+	height?: number;
+	dpr?: number;
+	uniforms?: Record<string, any>;
+	time?: number;
+	speed?: number;
 }

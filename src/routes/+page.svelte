@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import Sidebar from './Sidebar.svelte';
-	import { Gradient, type GradientOptions } from '$lib/index.js';
+	import { Gradient, type GradientOptions, type shaderState } from '$lib/index.js';
 	import { browser } from '$app/environment';
 	import 'ventoui-styles';
 	import { Button } from 'ventoui-button';
@@ -196,6 +196,10 @@
 		a.remove();
 		URL.revokeObjectURL(url);
 	}
+
+	let currentState: shaderState = $state('loading');
+
+	$inspect(currentState)
 </script>
 
 <div class="wrap">
@@ -204,6 +208,7 @@
 			{points}
 			{radius}
 			{intensity}
+			bind:currentState={currentState}
 			warp={{ mode: warpMode, amount: warpAmount, size: warpSize}}
 			speed={timeAmount}
 			grain={{amount: grainAmount, size: grainSize}}
