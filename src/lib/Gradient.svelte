@@ -3,6 +3,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import type { Warp, Grain, GradientOptions } from '$lib/index.js';
 	import { hexToRgb, isBrowser } from '$lib/utils.js';
+	import { createGradientWorker } from '$lib/workerFactory.js';
 
 	let {
 		points = [],
@@ -62,37 +63,42 @@
 		});
 	}
 
-	function updateResolution() {
-		if (!worker || !canvas) return;
+	function resizeCanvasToDisplaySize() {
+		if (!canvas || !worker) return;
 		const dpr = Math.max(1, window.devicePixelRatio || 1);
 		const width = Math.floor(canvas.clientWidth * dpr);
 		const height = Math.floor(canvas.clientHeight * dpr);
-		worker.postMessage({
-			type: 'updateUniforms',
-			uniforms: {
-				u_resolution: [width, height]
-			}
-		});
+		
+		if (canvas.width !== width || canvas.height !== height) {
+			worker.postMessage({
+				type: 'resize',
+				width,
+				height
+			});
+		}
 	}
 
 	function render(time: number) {
-		if (worker) {
-			if (lastTime === 0) lastTime = time;
-			const dt = (time - lastTime) * 0.001;
-			lastTime = time;
-			animTime += dt * speed;
+		if (!worker) return;
+		
+		if (lastTime === 0) lastTime = time;
+		const dt = (time - lastTime) * 0.001;
+		lastTime = time;
+		animTime += dt * speed;
 
-			worker.postMessage({
-				type: 'render',
-				time: animTime
-			});
+		resizeCanvasToDisplaySize();
+		updateUniforms();
 
-			if (running) {
-				currentState = 'playing';
-				frame = requestAnimationFrame(render);
-			} else {
-				currentState = 'paused';
-			}
+		worker.postMessage({
+			type: 'render',
+			time: animTime
+		});
+
+		if (running) {
+			currentState = 'playing';
+			frame = requestAnimationFrame(render);
+		} else {
+			currentState = 'paused';
 		}
 	}
 
@@ -100,52 +106,43 @@
 		if (!canvas || !isBrowser()) return;
 		currentState = 'loading';
 
-			worker = new Worker(new URL('./gradient.worker.ts', import.meta.url), { type: 'module' });
-			
-			worker.onmessage = (event: MessageEvent) => {
-				const { type } = event.data;
-				if (type === 'ready') {
-					updateUniforms();
-					currentState = 'playing';
-				} else if (type === 'rendering') {
-					currentState = 'playing';
-				} else if (type === 'paused') {
-					currentState = 'paused';
-				} else if (type === 'error') {
-					console.error('Worker error:', event.data.error);
-					currentState = 'paused';
-				}
-			};
-
-			const dpr = Math.max(1, window.devicePixelRatio || 1);
-			const width = Math.floor(canvas.clientWidth * dpr);
-			const height = Math.floor(canvas.clientHeight * dpr);
-			canvas.width = width;
-			canvas.height = height;
-
-			try {
-				const offscreenCanvas = canvas.transferControlToOffscreen();
-				worker.postMessage({
-					type: 'init',
-					offscreenCanvas,
-					fragShader: frag,
-					speed
-				}, [offscreenCanvas]);
-
-				const resizeObserver = new ResizeObserver(() => {
-				updateResolution();
-			});
-			resizeObserver.observe(canvas);
-			frame = requestAnimationFrame(render);
-			} catch (error) {
-				console.error('Could not transfer canvas to worker: ', error);
+		worker = createGradientWorker();
+		
+		worker.onmessage = (event: MessageEvent) => {
+			const { type } = event.data;
+			if (type === 'ready') {
+				updateUniforms();
+				currentState = 'playing';
+				frame = requestAnimationFrame(render);
+			} else if (type === 'error') {
+				console.error('Worker error:', event.data.error);
+				currentState = 'paused';
 			}
+		};
+
+		const dpr = Math.max(1, window.devicePixelRatio || 1);
+		const width = Math.floor(canvas.clientWidth * dpr);
+		const height = Math.floor(canvas.clientHeight * dpr);
+		canvas.width = width;
+		canvas.height = height;
+
+		try {
+			const offscreenCanvas = canvas.transferControlToOffscreen();
+			worker.postMessage({
+				type: 'init',
+				offscreenCanvas,
+				fragShader: frag
+			}, [offscreenCanvas]);
+		} catch (error) {
+			console.error('Could not transfer canvas to worker: ', error);
+		}
 	});
 
 	onDestroy(() => {
 		running = false;
 		if (!isBrowser()) return;
 		
+		if (frame) cancelAnimationFrame(frame);
 		if (worker) {
 			worker.postMessage({ type: 'destroy' });
 			worker.terminate();
@@ -153,7 +150,7 @@
 	});
 
 	$effect(() => {
-		if(worker && (points.length || radius || intensity || warp || grain || seed)) {
+		if (worker && (points.length || radius || intensity || warp || grain || seed)) {
 			updateUniforms();
 		}
 	});
