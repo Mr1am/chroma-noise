@@ -1,7 +1,7 @@
 <script lang="ts">
 	import frag from './fragment.txt?raw';
 	import { onMount, onDestroy } from 'svelte';
-	import { hexToRgb, isBrowser, createGradientWorker } from '$lib/index.js';
+	import { hexToRgb, isBrowser, createGradientWorker, getTargetSize } from '$lib/index.js';
 	import type { Warp, Grain, GradientOptions } from '$lib/index.js';
 
 	let {
@@ -15,6 +15,8 @@
 		seed = Math.random(),
 		currentState = $bindable('loading'),
 		class: c = '',
+		resolution = {},
+		blendMode = 'legacy',
 		...rest
 	}: GradientOptions = $props();
 
@@ -26,10 +28,13 @@
 
 	let canvas: HTMLCanvasElement | undefined = $state();
 	let worker: Worker | undefined = $state();
-	let frame: number;
-	let running = true;
+	let running = $state(false);
 	let lastTime = 0;
 	let animTime = 0;
+	let frame: number | null = null;
+	let currentCanvasSize = $state({ width: 0, height: 0 });
+
+	let lastUniforms = $state<Record<string, any>>({});
 
 	function updateUniforms() {
 		if (!worker) return;
@@ -43,31 +48,44 @@
 			posArr.set([points[i].x, points[i].y], i * 2);
 		}
 
-		worker.postMessage({
-			type: 'updateUniforms',
-			uniforms: {
-				u_colors: colorsArr,
-				u_positions: posArr,
-				u_count: Math.min(points.length, maxPoints),
-				u_radius: radius,
-				u_intensity: intensity,
-				u_warpMode: warp.mode,
-				u_warpSize: warp.size,
-				u_warpAmount: warp.amount,
-				u_grainAmount: grain.amount,
-				u_grainSize: grain.size,
-				u_seed: seed
+		const newUniforms = {
+			u_colors: colorsArr,
+			u_positions: posArr,
+			u_count: Math.min(points.length, maxPoints),
+			u_radius: radius,
+			u_intensity: intensity,
+			u_warpMode: Number(warp.mode),
+			u_warpSize: warp.size,
+			u_warpAmount: warp.amount,
+			u_grainAmount: grain.amount,
+			u_grainSize: grain.size,
+			u_seed: seed,
+			u_blendMode: blendMode === 'new' ? 0 : 1
+		};
+
+		const changedUniforms: Record<string, any> = {};
+		for (const [key, value] of Object.entries(newUniforms)) {
+			if (JSON.stringify(lastUniforms[key]) !== JSON.stringify(value)) {
+				changedUniforms[key] = value;
 			}
-		});
+		}
+
+		if (Object.keys(changedUniforms).length > 0) {
+			worker.postMessage({
+				type: 'updateUniforms',
+				uniforms: changedUniforms
+			});
+			lastUniforms = { ...newUniforms };
+		}
 	}
 
 	function resizeCanvasToDisplaySize() {
 		if (!canvas || !worker) return;
-		const dpr = Math.max(1, window.devicePixelRatio || 1);
-		const width = Math.floor(canvas.clientWidth * dpr);
-		const height = Math.floor(canvas.clientHeight * dpr);
+		
+		const { width, height } = getTargetSize(canvas, resolution);
 
-		if (canvas.width !== width || canvas.height !== height) {
+		if (currentCanvasSize.width !== width || currentCanvasSize.height !== height) {
+			currentCanvasSize = { width, height };
 			worker.postMessage({
 				type: 'resize',
 				width,
@@ -75,6 +93,18 @@
 			});
 		}
 	}
+
+	$effect(() => {
+		if (worker) {
+			updateUniforms();
+		}
+	});
+	
+	$effect(() => {
+		if (worker) {
+			resizeCanvasToDisplaySize();
+		}
+	});
 
 	function render(time: number) {
 		if (!worker) return;
@@ -84,9 +114,6 @@
 		lastTime = time;
 		animTime += dt * speed;
 
-		resizeCanvasToDisplaySize();
-		updateUniforms();
-
 		worker.postMessage({
 			type: 'render',
 			time: animTime
@@ -95,8 +122,6 @@
 		if (running) {
 			currentState = 'playing';
 			frame = requestAnimationFrame(render);
-		} else {
-			currentState = 'paused';
 		}
 	}
 
@@ -118,11 +143,8 @@
 			}
 		};
 
-		const dpr = Math.max(1, window.devicePixelRatio || 1);
-		const width = Math.floor(canvas.clientWidth * dpr);
-		const height = Math.floor(canvas.clientHeight * dpr);
-		canvas.width = width;
-		canvas.height = height;
+		const { width, height } = getTargetSize(canvas, resolution);
+		currentCanvasSize = { width, height };
 
 		try {
 			const offscreenCanvas = canvas.transferControlToOffscreen();
@@ -134,6 +156,8 @@
 				},
 				[offscreenCanvas]
 			);
+			worker.postMessage({ type: 'resize', width, height });
+			running = true;
 		} catch (error) {
 			console.error('Could not transfer canvas to worker: ', error);
 		}

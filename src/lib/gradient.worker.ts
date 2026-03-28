@@ -69,13 +69,18 @@ self.onmessage = (event: MessageEvent<RenderMessage>) => {
 		case 'updateUniforms': {
 			const { uniforms: newUniforms } = event.data;
 			if (newUniforms) {
-				currentUniforms = newUniforms;
+				console.log('Worker received uniforms:', newUniforms);
+				currentUniforms = {
+					...currentUniforms,
+					...newUniforms
+				};
+				console.log('Current uniforms after update:', currentUniforms);
 			}
 			break;
 		}
 		case 'resize': {
-			const { width, height, dpr } = event.data;
-			if (gl && width && height && dpr) {
+			const { width, height } = event.data;
+			if (gl && width && height) {
 				const scaledWidth = Math.floor(width);
 				const scaledHeight = Math.floor(height);
 				gl.canvas.width = scaledWidth;

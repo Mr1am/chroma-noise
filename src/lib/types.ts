@@ -34,6 +34,11 @@ export interface Grain {
 
 export type shaderState = 'loading' | 'playing' | 'paused';
 
+/**
+ * Blend modes for gradient rendering
+ */
+export type BlendMode = 'new' | 'legacy';
+
 /** Configuration for resolution. */
 export interface Resolution {
 	/** Canvas resolution width, default: canvas.clientWidth */
@@ -72,6 +77,8 @@ export interface GradientOptions {
 	class?: string;
 	/** Resolution settings */
 	resolution?: Resolution;
+	/** Blend mode for gradient rendering */
+	blendMode?: BlendMode;
 }
 
 export interface RenderMessage {

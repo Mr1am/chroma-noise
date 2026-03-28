@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import Sidebar from './Sidebar.svelte';
-	import { Gradient, type GradientOptions, type shaderState } from '$lib/index.js';
+	import { Gradient, type GradientOptions, type shaderState, type Resolution, type BlendMode } from '$lib/index.js';
 	import { browser } from '$app/environment';
 	import 'ventoui-styles';
 	import { Button } from 'ventoui-button';
 	import { type FlyParams, flyIn, flyOut } from 'svelte-fancy-transitions';
+	import Container from './Container.svelte';
 
 	interface Point { color: string; x: number; y: number; }
 	interface Props {
@@ -46,6 +47,8 @@
 	let grainSize = $state(DEFAULT_GRAIN_SIZE);
 	let seed = $state(DEFAULT_SEED);
 	let handlersVisible = $state(true);
+	let resolution: Resolution = $state({});
+	let blendMode: BlendMode = $state('new');
 
 	let toast = $state<{ msg: string; visible: boolean }>({ msg: '', visible: false });
 	let toastTimer: number | null = null;
@@ -95,19 +98,6 @@
 		rectCache = null;
 	}
 
-	function handleOptions(e: CustomEvent) {
-		const d = (e as any).detail ?? e;
-		if (typeof d.radius === 'number') radius = d.radius;
-		if (typeof d.intensity === 'number') intensity = d.intensity;
-		if (typeof d.warpMode === 'number') warpMode = d.warpMode;
-		if (typeof d.warpSize === 'number') warpSize = d.warpSize;
-		if (typeof d.warpAmount === 'number') warpAmount = d.warpAmount;
-		if (typeof d.timeAmount === 'number') timeAmount = d.timeAmount;
-		if (typeof d.grainAmount === 'number') grainAmount = d.grainAmount;
-		if (typeof d.grainSize === 'number') grainSize = d.grainSize;
-		if (typeof d.seed === 'number') seed = d.seed;
-	}
-
 	onMount(() => {
 		if (!browser) return;
 		window.addEventListener('pointermove', onPointerMove);
@@ -132,6 +122,8 @@
 		grainAmount = DEFAULT_GRAIN_AMOUNT;
 		grainSize = DEFAULT_GRAIN_SIZE;
 		seed = DEFAULT_SEED;
+		resolution = {};
+		blendMode = 'new';
 		showToast('Reset to defaults');
 	}
 
@@ -150,7 +142,9 @@
 				amount: grainAmount,
 				size: grainSize
 			},
-			seed
+			seed,
+			resolution,
+			blendMode
 		};
 	}
 
@@ -197,9 +191,53 @@
 		URL.revokeObjectURL(url);
 	}
 
-	let currentState: shaderState = $state('loading');
+	async function loadFromFile() {
+		if (!browser) {
+			showToast('File loading is not available');
+			return;
+		}
 
-	$inspect(currentState)
+		const input = document.createElement('input');
+		input.type = 'file';
+		input.accept = '.json';
+		
+		input.onchange = async (e) => {
+			const file = (e.target as HTMLInputElement).files?.[0];
+			if (!file) return;
+
+			try {
+				const text = await file.text();
+				const config: GradientOptions = JSON.parse(text);
+				
+				// Apply loaded configuration
+				if (config.points) points = config.points.map(p => ({ ...p }));
+				if (config.radius !== undefined) radius = config.radius;
+				if (config.intensity !== undefined) intensity = config.intensity;
+				if (config.warp) {
+					if (config.warp.mode !== undefined) warpMode = config.warp.mode;
+					if (config.warp.amount !== undefined) warpAmount = config.warp.amount;
+					if (config.warp.size !== undefined) warpSize = config.warp.size;
+				}
+				if (config.speed !== undefined) timeAmount = config.speed;
+				if (config.grain) {
+					if (config.grain.amount !== undefined) grainAmount = config.grain.amount;
+					if (config.grain.size !== undefined) grainSize = config.grain.size;
+				}
+				if (config.seed !== undefined) seed = config.seed;
+				if (config.resolution) resolution = config.resolution;
+				if (config.blendMode) blendMode = config.blendMode;
+				
+				showToast('Configuration loaded successfully');
+			} catch (err) {
+				console.error('Failed to load configuration:', err);
+				showToast('Failed to load configuration file');
+			}
+		};
+
+		input.click();
+	}
+
+	let currentState: shaderState = $state('loading');
 </script>
 
 <div class="wrap">
@@ -208,11 +246,13 @@
 			{points}
 			{radius}
 			{intensity}
+			{blendMode}
 			bind:currentState={currentState}
 			warp={{ mode: warpMode, amount: warpAmount, size: warpSize}}
 			speed={timeAmount}
 			grain={{amount: grainAmount, size: grainSize}}
 			{seed}
+			{resolution}
 		/>
 		{#each points as p, i}
 			<div
@@ -236,19 +276,23 @@
 
 	<Sidebar
 		bind:points={points}
-		{radius}
-		{intensity}
-		{grainAmount}
-		{grainSize}
+		bind:radius={radius}
+		bind:intensity={intensity}
+		bind:grainAmount={grainAmount}
+		bind:grainSize={grainSize}
 		bind:warpMode={warpMode}
-		{warpSize}
-		{warpAmount}
-		{timeAmount}
-		{seed}
-		options={(e) => handleOptions(e)}
+		bind:warpSize={warpSize}
+		bind:warpAmount={warpAmount}
+		bind:timeAmount={timeAmount}
+		bind:seed={seed}
+		bind:resolution={resolution}
+		bind:blendMode={blendMode}
 		bind:handlers={handlersVisible}>
-		<Button glare class="s radius-large" onclick={exportToClipboard} aria-label="export-config">Copy setup</Button>
-		<Button glare class="s radius-large" onclick={exportToJson} aria-label="export-config">Download setup</Button>
+		<div class="horizontal gap-xs radius-large">
+			<Button glare class="s radius-large" onclick={loadFromFile} aria-label="load-config">Load</Button>
+			<Button glare class="s radius-large" onclick={exportToJson} aria-label="export-config">Download</Button>
+		</div>
+		<Button glare class="s radius-large" onclick={exportToClipboard} aria-label="export-config">Copy</Button>
 		<Button glare class="s radius-large" onclick={resetDefaults} aria-label="reset-defaults">Reset</Button>
 	</Sidebar>
 </div>

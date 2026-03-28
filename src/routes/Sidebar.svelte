@@ -2,37 +2,41 @@
 	import { Button } from 'ventoui-button';
 	import { Slider } from 'ventoui-slider';
 	import { slide } from 'svelte/transition';
+	import type { Point } from '$lib/index.js';
+	import Container from './Container.svelte';
 
 	interface Props {
-		points?: { color: string; x: number; y: number }[];
+		points?: Point[];
 		radius?: number;
 		intensity?: number;
-		timeAmount?: number;
 		warpMode?: number;
 		warpSize?: number;
 		warpAmount?: number;
+		timeAmount?: number;
 		grainAmount?: number;
 		grainSize?: number;
 		grainAnimate?: boolean;
 		seed?: number;
 		handlers?: boolean;
-		options?: (option: any) => void;
+		resolution?: import('$lib/index.js').Resolution;
+		blendMode?: import('$lib/index.js').BlendMode;
 		children?: import('svelte').Snippet;
 	}
 
 	let {
 		points = $bindable([]),
-		radius = 0.6,
-		intensity = 1.0,
-		timeAmount = 1.0,
+		radius = $bindable(0.6),
+		intensity = $bindable(1.0),
+		timeAmount = $bindable(1.0),
 		warpMode = $bindable(0),
-		warpSize = 1.0,
-		warpAmount = 0.0,
-		grainAmount = 0.0,
-		grainSize = 1.0,
+		warpSize = $bindable(1.0),
+		warpAmount = $bindable(0.0),
+		grainAmount = $bindable(0.0),
+		grainSize = $bindable(1.0),
 		handlers = $bindable(true),
-		options = ({}) => {},
-		seed = Math.random(),
+		resolution = $bindable({}),
+		blendMode = $bindable('new'),
+		seed = $bindable(Math.random()),
 		children
 	}: Props = $props();
 
@@ -47,116 +51,151 @@
 		points = points.map((p, idx) => (idx === i ? { ...p, ...partial } : p));
 	}
 
-	$effect(() => options({ radius }));
-	$effect(() => options({ intensity }));
-	$effect(() => options({ warpSize }));
-	$effect(() => options({ warpAmount }));
-	$effect(() => options({ seed }));
-	$effect(() => options({ timeAmount }));
-	$effect(() => options({ grainAmount }));
-	$effect(() => options({ grainSize }));
 	function randomizeSeed() {
-		const s = Math.random();
-		options({ seed: s });
+		seed = Math.random();
 	}
 </script>
 
 <aside class="sidebar">
-	<h1>Colors</h1>
-	<div class="colors">
-		{#each points as point, i}
-			<div class="point-row" transition:slide|global={{ axis: 'x' }}>
-				<input
-					class="color-input"
-					type="color"
-					bind:value={point.color}
-					oninput={(e) => updatePoint(i, { color: e.target.value })}
-				/>
-				<button class="remove-btn centered" onclick={() => removePoint(i)}>✕</button>
+	<Container>
+		<h1>Colors</h1>
+		<span class="div"></span>
+		<div class="colors">
+			{#each points as point, i}
+				<div class="point-row" transition:slide|global={{ axis: 'x' }}>
+					<input
+						class="color-input"
+						type="color"
+						bind:value={point.color}
+						oninput={(e) => updatePoint(i, { color: e.target.value })}
+					/>
+					<button class="remove-btn centered" onclick={() => removePoint(i)}>✕</button>
+				</div>
+			{/each}
+			<Button glare class="add-btn centered s-inline width-fit radius-large" onclick={addPoint}>+</Button>
+		</div>
+	</Container>
+	<Container>
+		<h1>Blend</h1>
+		<span class="div"></span>
+		<Slider label={`Radius: ${radius.toFixed(2)}`} min={0.01} max={2} step={0.01} bind:value={radius}
+		></Slider>
+		<Slider
+			label={`Intensity: ${intensity.toFixed(2)}`}
+			min={0.01}
+			max={3}
+			step={0.01}
+			bind:value={intensity}
+		></Slider>
+		<div class="horizontal gap-xs center">
+			<p>Mode</p>
+			<select class="plain width-fill radius-large" bind:value={blendMode}>
+				<option value="new">New</option>
+				<option value="legacy">Legacy</option>
+			</select>
 			</div>
-		{/each}
-		<Button glare class="add-btn centered s-inline width-fit radius-large" onclick={addPoint}>+</Button>
-	</div>
-	<h1>Blend</h1>
-	<Slider label={`Radius: ${radius.toFixed(2)}`} min={0.01} max={2} step={0.01} bind:value={radius}
-	></Slider>
-	<Slider
-		label={`Intensity: ${intensity.toFixed(2)}`}
-		min={0.01}
-		max={3}
-		step={0.01}
-		bind:value={intensity}
-	></Slider>
-	<h1>Warp</h1>
-	<div class="horizontal gap-xs">
-		<p>Mode</p>
-		<select class="plain width-fill radius-large" bind:value={warpMode}>
-			<option value="0">None</option>
-			<option value="1">Waves</option>
-			<option value="2">Simplex Noise</option>
-			<option value="3">FBM (fractal)</option>
-			<option value="4">Ridged</option>
-			<option value="5">Swirl</option>
-			<option value="6">Radial waves</option>
-		</select>
-	</div>
+	</Container>
+	<Container>
+		<h1>Warp</h1>
+		<span class="div"></span>
+		<div class="horizontal gap-xs">
+			<p>Mode</p>
+			<select class="plain width-fill radius-large" bind:value={warpMode}>
+				<option value="0">None</option>
+				<option value="1">Waves</option>
+				<option value="2">Simplex Noise</option>
+				<option value="3">FBM (fractal)</option>
+				<option value="4">Ridged</option>
+				<option value="5">Swirl</option>
+				<option value="6">Radial waves</option>
+			</select>
+		</div>
+		<Slider
+			label={`Size: ${warpSize.toFixed(2)}`}
+			min={0.05}
+			max={10}
+			step={0.05}
+			bind:value={warpSize}
+		></Slider>
+		<Slider
+			label={`Amount: ${warpAmount.toFixed(2)}`}
+			min={0}
+			max={2}
+			step={0.01}
+			bind:value={warpAmount}
+		></Slider>
+		<div class="horizontal gap-xs center">
+			<p>Seed:</p>
+			<input
+				class="width-fill s sec radius-large"
+				type="number"
+				min="0"
+				max="1"
+				step="0.001"
+				bind:value={seed}
+			/>
+			<Button
+				glare
+				class="centered radius-large s width-fit"
+				onclick={randomizeSeed}>Random</Button>
+		</div>
+	</Container>
+	<Container>
+		<h1>Animation</h1>
+		<span class="div"></span>
+		<Slider
+			label={`Speed: ${timeAmount.toFixed(2)}`}
+			min={0}
+			max={5}
+			step={0.01}
+			bind:value={timeAmount}
+		></Slider>
+	</Container>
 
-	<Slider
-		label={`Size: ${warpSize.toFixed(2)}`}
-		min={0.05}
-		max={10}
-		step={0.05}
-		bind:value={warpSize}
-	></Slider>
-	<Slider
-		label={`Amount: ${warpAmount.toFixed(2)}`}
-		min={0}
-		max={2}
-		step={0.01}
-		bind:value={warpAmount}
-	></Slider>
+	<Container>
+		<h1>Grain</h1>
+		<span class="div"></span>
+		<Slider
+			label={`Amount: ${grainAmount.toFixed(2)}`}
+			min={0}
+			max={0.25}
+			step={0.005}
+			bind:value={grainAmount}
+		></Slider>
+		<Slider label={`Size: ${grainSize.toFixed(2)}`} min={0} max={20} step={0.1} bind:value={grainSize}
+		></Slider>
+	</Container>
 
-	<div class="horizontal gap-xs center">
-		<p>Seed:</p>
-		<input
-			class="width-fill s sec radius-large"
-			type="number"
-			min="0"
-			max="1"
-			step="0.001"
-			bind:value={seed}
-		/>
-		<Button
-			glare
-			class="centered radius-large s width-fit"
-			onclick={randomizeSeed}>Random</Button>
-	</div>
+	<Container>
+		<h1>Resolution</h1>
+		<span class="div"></span>
+		<div class="horizontal gap-xs">
+			<p>Width</p>
+			<input class="width-fill s sec radius-large" type="number" min="100" max="4000" bind:value={resolution.width} placeholder="auto" />
+		</div>
+		<div class="horizontal gap-xs">
+			<p>Height</p>
+			<input class="width-fill s sec radius-large" type="number" min="100" max="4000" bind:value={resolution.height} placeholder="auto" />
+		</div>
+		<div class="horizontal gap-xs">
+			<p>Modifier</p>
+			<input class="width-fill s sec radius-large" type="number" min="0.01" max="2" step="0.01" bind:value={resolution.modifier} placeholder="1.0" />
+		</div>
+		<div class="horizontal gap-xs">
+			<p>Use DPR</p>
+			<input type="checkbox" bind:checked={resolution.useDPR} />
+		</div>
+	</Container>
 
-	<h1>Animation</h1>
-	<Slider
-		label={`Speed: ${timeAmount.toFixed(2)}`}
-		min={0}
-		max={5}
-		step={0.01}
-		bind:value={timeAmount}
-	></Slider>
+	<Container>
+		<h1>Color handlers</h1>
+		<span class="div"></span>
+		<div class="horizontal gap-xs start">
+			<p>Show</p>
+			<input type="checkbox" class="height-fill" bind:checked={handlers} />
+		</div>
+	</Container>
 
-	<h1>Grain</h1>
-	<Slider
-		label={`Amount: ${grainAmount.toFixed(2)}`}
-		min={0}
-		max={0.25}
-		step={0.005}
-		bind:value={grainAmount}
-	></Slider>
-	<Slider label={`Size: ${grainSize.toFixed(2)}`} min={0} max={20} step={0.1} bind:value={grainSize}
-	></Slider>
-
-	<h1>Color handlers</h1>
-	<div class="horizontal gap-xs start">
-		<p>Show</p>
-		<input type="checkbox" class="height-fill" bind:checked={handlers} />
-	</div>
 	{@render children?.()}
 </aside>
 
@@ -166,8 +205,9 @@
 		text-align: left;
 	}
 	h1 {
-		margin-top: var(--s);
-		font-size: 1.1rem;
+		font-size: 1rem;
+		font-weight: 500;
+		text-transform: uppercase;
 	}
 	.colors {
 		display: flex;
@@ -184,8 +224,9 @@
 	}
 
 	.sidebar {
-		width: 320px;
-		padding: 18px;
+		width: 20rem;
+		min-width: 20rem;
+		padding: 0.5rem;
 		box-sizing: border-box;
 		background: #111;
 		color: #ddd;
@@ -246,5 +287,19 @@
 			width: 100vw;
 			height: 35dvh;
 		}
+	}
+
+	.div {
+		display: flex;
+		margin-block: 0.5rem;
+		height: 1px;
+		min-height: 1px;
+		width: 100%;
+		background: var(--fg-tint-hover);
+	}
+
+	:global(.slider-container) {
+		gap: 0.25rem;
+		padding-top: 0.5rem;
 	}
 </style>

@@ -21,7 +21,8 @@ export const SHADER_UNIFORMS = [
 	'u_warpAmount',
 	'u_grainAmount',
 	'u_grainSize',
-	'u_seed'
+	'u_seed',
+	'u_blendMode'
 ] as const;
 
 export const VERTEX_SHADER = `attribute vec2 a_pos;void main() {gl_Position = vec4(a_pos, 0.0, 1.0);}`;
@@ -85,11 +86,39 @@ export function setupQuadBuffer(
 	gl.vertexAttribPointer(a_pos, 2, gl.FLOAT, false, 0, 0);
 }
 
-export function getCanvasSize(canvas: HTMLCanvasElement): { width: number; height: number; dpr: number } {
+/**
+ * Calculate target canvas size based on resolution settings
+ */
+export function getTargetSize(canvas: HTMLCanvasElement, resolution: import('./types.js').Resolution) {
 	const dpr = Math.max(1, window.devicePixelRatio || 1);
-	const width = Math.floor(canvas.clientWidth * dpr);
-	const height = Math.floor(canvas.clientHeight * dpr);
-	return { width, height, dpr };
+	const clientWidth = canvas.clientWidth;
+	const clientHeight = canvas.clientHeight;
+	
+	let width = clientWidth;
+	let height = clientHeight;
+
+	if (resolution.width !== undefined) {
+		width = resolution.width;
+	}
+	if (resolution.height !== undefined) {
+		height = resolution.height;
+	}
+
+	if (resolution.modifier !== undefined) {
+		const modifier = Math.max(0.01, Math.min(2.0, resolution.modifier));
+		width = width * modifier;
+		height = height * modifier;
+	}
+
+	if (resolution.useDPR !== false) {
+		width = width * dpr;
+		height = height * dpr;
+	}
+	
+	return {
+		width: Math.floor(width),
+		height: Math.floor(height)
+	};
 }
 
 export const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -109,7 +138,8 @@ export const UNIFORM_TYPES: Record<string, 'vec2' | 'vec3f' | 'vec2f' | 'i32' | 
 	u_warpAmount: 'f32',
 	u_grainAmount: 'f32',
 	u_grainSize: 'f32',
-	u_seed: 'f32'
+	u_seed: 'f32',
+	u_blendMode: 'i32'
 };
 
 /**
