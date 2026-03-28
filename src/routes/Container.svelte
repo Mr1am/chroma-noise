@@ -11,5 +11,6 @@
 		background: var(--fg-tint);
 		border-radius: 1rem;
 		padding: 1rem;
+		touch-action: auto;
 	}
 </style>
