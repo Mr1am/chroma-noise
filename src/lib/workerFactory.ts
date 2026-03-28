@@ -1,6 +1,6 @@
 /**
  * Worker factory that creates a gradient rendering worker as a Blob
- * This approach ensures the worker works correctly when the package is consumed by other projects
+ * This approach ensures the worker works correctly
  */
 
 export function createGradientWorker(): Worker {

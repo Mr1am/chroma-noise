@@ -1,9 +1,8 @@
 <script lang="ts">
 	import frag from './fragment.txt?raw';
 	import { onMount, onDestroy } from 'svelte';
+	import { hexToRgb, isBrowser, createGradientWorker } from '$lib/index.js';
 	import type { Warp, Grain, GradientOptions } from '$lib/index.js';
-	import { hexToRgb, isBrowser } from '$lib/utils.js';
-	import { createGradientWorker } from '$lib/workerFactory.js';
 
 	let {
 		points = [],
@@ -31,7 +30,6 @@
 	let running = true;
 	let lastTime = 0;
 	let animTime = 0;
-
 
 	function updateUniforms() {
 		if (!worker) return;
@@ -68,7 +66,7 @@
 		const dpr = Math.max(1, window.devicePixelRatio || 1);
 		const width = Math.floor(canvas.clientWidth * dpr);
 		const height = Math.floor(canvas.clientHeight * dpr);
-		
+
 		if (canvas.width !== width || canvas.height !== height) {
 			worker.postMessage({
 				type: 'resize',
@@ -80,7 +78,7 @@
 
 	function render(time: number) {
 		if (!worker) return;
-		
+
 		if (lastTime === 0) lastTime = time;
 		const dt = (time - lastTime) * 0.001;
 		lastTime = time;
@@ -107,7 +105,7 @@
 		currentState = 'loading';
 
 		worker = createGradientWorker();
-		
+
 		worker.onmessage = (event: MessageEvent) => {
 			const { type } = event.data;
 			if (type === 'ready') {
@@ -128,11 +126,14 @@
 
 		try {
 			const offscreenCanvas = canvas.transferControlToOffscreen();
-			worker.postMessage({
-				type: 'init',
-				offscreenCanvas,
-				fragShader: frag
-			}, [offscreenCanvas]);
+			worker.postMessage(
+				{
+					type: 'init',
+					offscreenCanvas,
+					fragShader: frag
+				},
+				[offscreenCanvas]
+			);
 		} catch (error) {
 			console.error('Could not transfer canvas to worker: ', error);
 		}
@@ -141,7 +142,7 @@
 	onDestroy(() => {
 		running = false;
 		if (!isBrowser()) return;
-		
+
 		if (frame) cancelAnimationFrame(frame);
 		if (worker) {
 			worker.postMessage({ type: 'destroy' });
@@ -156,10 +157,19 @@
 	});
 </script>
 
-<canvas bind:this={canvas} {...rest} class="{c} {currentState}"></canvas>
+<canvas bind:this={canvas} {...rest} class="{currentState} {c}"></canvas>
 
 <style>
-	canvas { width: 100%; height: 100%; display: block; transition: opacity 1s ease-out }
-	canvas.loading { opacity: 0; }
-	canvas.playing { opacity: 1; }
+	canvas {
+		width: 100%;
+		height: 100%;
+		display: block;
+		transition: opacity 1s ease-out;
+	}
+	canvas.loading {
+		opacity: 0;
+	}
+	canvas.playing {
+		opacity: 1;
+	}
 </style>

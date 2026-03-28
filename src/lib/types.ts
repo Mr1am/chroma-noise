@@ -34,6 +34,18 @@ export interface Grain {
 
 export type shaderState = 'loading' | 'playing' | 'paused';
 
+/** Configuration for resolution. */
+export interface Resolution {
+	/** Canvas resolution width, default: canvas.clientWidth */
+	width?: number;
+	/** Canvas resolution height, default: canvas.clientHeight */
+	height?: number;
+	/** Canvas resolution modifier, default: 1, min: 0.01, max: 2 */
+	modifier?: number;
+	/** Determines whether to use DPR, default: false */
+	useDPR?: boolean;
+}
+
 /**
  * Configuration for the gradient.
  */
@@ -58,6 +70,8 @@ export interface GradientOptions {
 	currentState?: shaderState;
 	/** Class applied to the canvas element **/
 	class?: string;
+	/** Resolution settings */
+	resolution?: Resolution;
 }
 
 export interface RenderMessage {
